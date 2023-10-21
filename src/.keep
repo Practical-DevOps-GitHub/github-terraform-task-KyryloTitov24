@@ -1,0 +1,95 @@
+resource "github_repository" "example_TerraformTry" {
+  name        = "TerraformTry_Titov"
+  description = "My awesome codebase terraformTitov"
+  auto_init             = true  
+  visibility = "public"
+}
+
+
+resource "github_branch" "development" {
+  repository = github_repository.example_TerraformTry.name
+  branch     = "main"
+}
+
+resource "github_branch" "develop" {
+  repository = github_repository.example_TerraformTry.name
+  branch     = "develop"
+}
+
+resource "github_branch_default" "default"{
+  repository = github_repository.example_TerraformTry.name
+  branch     = github_branch.develop.branch
+}
+
+resource "github_branch_protection" "example_TerraformTry" {
+  repository_id = github_repository.example_TerraformTry.node_id
+  # also accepts repository name
+  # repository_id  = github_repository.example.name
+
+  pattern          = "main"
+  enforce_admins   = true
+  allows_deletions = true
+  required_pull_request_reviews {
+    dismiss_stale_reviews  = true
+    require_code_owner_reviews    = true
+    }
+
+}
+
+resource "github_branch_protection" "example_Ter" {
+  repository_id = github_repository.example_TerraformTry.node_id
+  # also accepts repository name
+  # repository_id  = github_repository.example.name
+
+  pattern          = "develop"
+  enforce_admins   = true
+  allows_deletions = true
+  required_pull_request_reviews {
+        required_approving_review_count = 2
+    }
+
+}
+
+
+resource "github_repository_collaborator" "a_repo_collaborator" {
+  repository = github_repository.example_TerraformTry.name
+  username   = "softservedata"
+  permission = "pull"
+}
+
+resource "github_repository_deploy_key" "deploy_key" {
+  repository = github_repository.example_TerraformTry.name
+  title      = "DEPLOY_KEY"
+  key        = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrrruCtFuvGf4e2PpkqYjMiTMOEEvwIhOTgGslrIFPIxchtc4vXYskNEh1F9oJXUx18fRL2I+afv1Y+7o9msviW+yUbXj/vJ4hYBKW/wVAWFt/Onqiljf5KzARg8i2l7xL0rNgKx2JNtoReCo3SKI9Yd8WEaEaOYglT0U1Ig8DxQzl+QPPJHTpdJn1F4l5B96QnauzEonvNVzULG52LIGCejZw8ZNEqc0aiVILBcTnX0/wxvZjEqUqagJIGQvtkqRTwpsMKifrhMiCbRtsWR2Pud4JG++5U6w5fhxQWNxplM1/3xsvL4ROno3FGV3Qx6WAjubCzoz8VX8lu7MGYWGP key1"
+  read_only  = "false"
+}
+
+resource "github_repository_file" "pull_request_template" {
+  repository = github_repository.example_TerraformTry.name
+  file       = ".github/pull_request_template.md"
+  content    = <<EOF
+# Pull Request Template
+
+**Describe your changes:**
+
+**Issue ticket number and link:**
+
+**Checklist before requesting a review:**
+
+- [ ] I have performed a self-review of my code
+- [ ] If it is a core feature, I have added thorough tests
+- [ ] Do we need to implement analytics?
+- [ ] Will this be part of a product update? If yes, please write one phrase about this update
+EOF
+}
+
+resource "github_repository_webhook" "foo" {
+  repository = github_repository.example_TerraformTry.name
+  configuration {
+    url          = "https://discord.com/api/webhooks/1165229230402060339/9msq5jp9BTY1l--43DSUQ52UcmfqtDPJsDpNcjm4pOOsarfvgHFK-rMU9LhoboIrVaEJ/github"
+    content_type = "json"
+    insecure_ssl = false
+  }
+  events = ["push"]
+  active = true
+}
